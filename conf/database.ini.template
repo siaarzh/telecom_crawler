@@ -1,0 +1,6 @@
+[oracle]
+host=127.0.0.1
+port=1521
+sid=DATABASE_A
+user=johndoe
+password=pass1234
