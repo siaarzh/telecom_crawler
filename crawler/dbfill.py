@@ -1,7 +1,6 @@
 import cx_Oracle
 from configparser import ConfigParser
 import logging
-import os
 
 
 class DB:
@@ -12,6 +11,7 @@ class DB:
         Basic logging set-up, configuration file parsing, connection test
         """
         # Logging set-up
+        # TODO: Move this to config file
         self._application_name = "DbFill"
         self._logger = logging.getLogger(self._application_name)
         self._logger.setLevel(logging.INFO)
@@ -151,3 +151,9 @@ class DbFill(DB):
         or_cur.execute("SELECT COUNT(*) from {}".format(table_name))
         result = or_cur.fetchone()
         return result[0]
+
+    def purge(self, tables):
+        if type(tables) is not list: tables = [tables]
+        for table in tables:
+            sql = 'TRUNCATE TABLE {}'.format(table)
+            self.send_command(sql)

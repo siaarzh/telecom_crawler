@@ -26,7 +26,7 @@ args=(sys.stdout,)
 [handler_logfile]
 class=FileHandler
 level=DEBUG
-args=['logs/crawler.log']
+args=['logs/crawler.log', 'a', 'utf-8']
 formatter=default
 
 [formatter_default]
