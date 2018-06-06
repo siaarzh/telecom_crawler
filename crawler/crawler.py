@@ -46,18 +46,19 @@ def init_main():
 
 
 def run():
-    init_main()
-
-    job_queue = queue_jobs()
-    job_queue = download_extract_files(job_queue)
-
     t0 = time()
+
+    init_main()
+    logger.info("Downloading and Extracting... ")
+    job_queue = queue_jobs()  # Get jobs
+    job_queue = download_extract_files(job_queue)  # Download, extract, update paths
+
     db = DbFill(os.path.join('conf', 'database.ini'))
 
     for table_name, table_data in job_queue.items():
         try:
             db.purge(table_name)
-            logger.warning('{}: Truncated!'.format(table_name))
+            logger.info('{}: Table cleared!'.format(table_name))
 
             data = prepare_data(table_data, table_name)
             data_rows = len(data)

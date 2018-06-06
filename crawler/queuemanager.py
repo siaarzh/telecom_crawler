@@ -111,7 +111,7 @@ def download_extract_files(job_queue: dict, logger_name: str = 'crawler'):
             result, file_name = retrieve_file_object(url)
             file_path = os.path.join(table_info["store"], file_name)
             # file_name = file_name.encode('utf-8').decode('utf-8')
-            logger.debug('{}: downloading {}'.format(table, file_name))
+            logger.debug('{}: Downloading {}'.format(table, file_name))
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(file_path, 'wb') as f:
                 f.write(result.content)
@@ -121,17 +121,17 @@ def download_extract_files(job_queue: dict, logger_name: str = 'crawler'):
             # 3. (Extract and) Append path to spreadsheet
             if file_ext in (".xls", ".xlsx"):
 
-                logger.info('{}: saving {}'.format(table, file_name))
+                logger.debug('{}: Saving {}'.format(table, file_name))
                 job_queue[table]["path"].append(file_path)
                 temp_sheet.append(job_queue[table]["sheet"][i])
                 temp_skip_row.append(job_queue[table]["skip_row"][i])
 
             elif file_ext in ['rar', 'zip']:
                 if file_ext == '.rar':
-                    logger.debug("{}: checking contents of {}".format(table, file_name))
+                    logger.debug("{}: Checking contents of {}".format(table, file_name))
                     archive = rarfile.RarFile(file_path)
                 elif file_ext == '.zip':
-                    logger.debug("{}: checking contents of {}".format(table, file_name))
+                    logger.debug("{}: Checking contents of {}".format(table, file_name))
                     archive = zipfile.ZipFile(file_path)
                 else:
                     logger.error("{}: Could not recognize archive format. \n"
@@ -142,12 +142,12 @@ def download_extract_files(job_queue: dict, logger_name: str = 'crawler'):
                     _, f_ext = os.path.splitext(f)
                     if f_ext in (".xls", ".xlsx"):
                         archive.extract(f, table_info["store"])
-                        logger.info("{}: saving {} (from {})".format(table, f, file_name))
+                        logger.debug("{}: Saving {} (from {})".format(table, f, file_name))
                         job_queue[table]["path"].append(os.path.join(table_info["store"], f))
                         temp_sheet.append(job_queue[table]["sheet"][i])
                         temp_skip_row.append(job_queue[table]["skip_row"][i])
 
-                logger.debug("{}: removing {}".format(table, file_name))
+                logger.debug("{}: Removing {}".format(table, file_name))
                 os.remove(file_path)
 
         job_queue[table]["sheet"] = temp_sheet
@@ -172,7 +172,7 @@ def prepare_data(table_data: dict, table_name: str, logger_name: str = 'crawler'
     """
     logger = logging.getLogger(logger_name)
 
-    logger.info("{}: Pre-processing...".format(table_name))
+    logger.debug("{}: Pre-processing...".format(table_name))
     # Blank data frame
     data = pd.DataFrame()
     # Open Excel
@@ -216,10 +216,10 @@ def prepare_data(table_data: dict, table_name: str, logger_name: str = 'crawler'
         data = data.loc[:data[(data[table_data["index_col"]] == '')].index[0] - 1, :]
         if len(data) == 0:
             raise IndexError
-        logger.warning('{}: truncated from {} to {} rows'.format(table_name, rows_b_trunc, len(data)))
+        logger.warning('{}: Trimmed from {} to {} rows'.format(table_name, rows_b_trunc, len(data)))
     except IndexError:
         pass
-    logger.info('{}: Pre-processing complete, {} rows'.format(table_name, len(data)))
+    logger.debug('{}: Pre-processing complete, {} rows'.format(table_name, len(data)))
     return data
 
 
