@@ -29,6 +29,8 @@ def create_or_update():
         return {'success': False,
                 'message': 'No jobs specified.'}
 
+    os.makedirs('jobs')
+
     try:
         for job_name in os.listdir('jobspecs'):
             if job_name.endswith(".py") and '__init__' not in job_name:
