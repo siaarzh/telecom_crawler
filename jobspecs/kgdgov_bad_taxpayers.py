@@ -17,14 +17,14 @@ def create(store=None):
         store = os.path.join(root_path, 'data')
 
     # 1. Define tables
-    table_names = ["T_KGDGOV_PSEUDO_COMPANY",
-                   "T_KGDGOV_WRONG_ADDRESS",
-                   "T_KGDGOV_BANKRUPT",
-                   "T_KGDGOV_INACTIVE",
-                   "T_KGDGOV_INVALID_REGISTRATION",
-                   "T_KGDGOV_VIOLATION_TAX_CODE",
-                   "T_KGDGOV_TAX_ARREARS_150",  # MRP > 150
-                   "T_KGDGOV_TAX_ARREARS_10"]  # MRP > 10
+    table_names = ["CR_KGDGOV_PSEUDO_COMPANY",
+                   "CR_KGDGOV_WRONG_ADDRESS",
+                   "CR_KGDGOV_BANKRUPT",
+                   "CR_KGDGOV_INACTIVE",
+                   "CR_KGDGOV_INVALID_REGISTRATION",
+                   "CR_KGDGOV_VIOLATION_TAX_CODE",
+                   "CR_KGDGOV_TAX_ARREARS_150",  # MRP > 150
+                   "CR_KGDGOV_TAX_ARREARS_10"]  # MRP > 10
 
     structures = [
         ["Num", "BIN", "RNN", "taxpayer_organization", "taxpayer_name", "owner_name", "owner_IIN", "owner_RNN",

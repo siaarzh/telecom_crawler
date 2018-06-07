@@ -17,12 +17,12 @@ def create(store=None):
         store = os.path.join(root_path, 'data')
 
     # 1. Define tables
-    table_names = ["T_STATGOV_OKED",
-                   "T_STATGOV_KPVED",
-                   "T_STATGOV_KATO",
-                   "T_STATGOV_NVED",
-                   "T_STATGOV_KURK",
-                   "T_STATGOV_MKEIS"]
+    table_names = ["CR_STATGOV_OKED",
+                   "CR_STATGOV_KPVED",
+                   "CR_STATGOV_KATO",
+                   "CR_STATGOV_NVED",
+                   "CR_STATGOV_KURK",
+                   "CR_STATGOV_MKEIS"]
 
     structures = [["Code", "Name_Kaz", "Name_Rus"],
                   ["Code", "Name_Kaz", "Name_Rus"],

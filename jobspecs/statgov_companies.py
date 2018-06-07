@@ -21,7 +21,7 @@ def create(store=None):
         store = os.path.join(root_path, 'data')
 
     # 1. Define tables
-    table_names = ['T_STATGOV_COMPANIES']
+    table_names = ["CR_STATGOV_COMPANIES"]
 
     structures = [["BIN",
                    "Full_Name_Kz",
