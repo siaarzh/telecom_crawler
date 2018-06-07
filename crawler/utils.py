@@ -3,6 +3,8 @@ import logging
 import os
 from configparser import RawConfigParser
 
+import requests
+
 
 def make_log_dir(conf_file: str):
     """
@@ -22,6 +24,14 @@ def make_log_dir(conf_file: str):
             if k == 'class' and val == 'FileHandler':
                 for log_path in ast.literal_eval(str(parser[section]['args']))[:1]:
                     os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+def internet_on():
+    try:
+        requests.get('http://216.58.192.142')
+        return True
+    except requests.exceptions.ConnectionError:
+        return False
+
 
 class MsgCounterHandler(logging.Handler):
     level2count = None

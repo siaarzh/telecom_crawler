@@ -7,10 +7,10 @@ from time import time
 
 from crawler.dbfill import DbFill
 from crawler.queuemanager import queue_jobs, download_extract_files, prepare_data
-from crawler.utils import make_log_dir, MsgCounterHandler
+from crawler.utils import make_log_dir, MsgCounterHandler, internet_on
 
 
-def init_main():
+def init_logger():
     global root_path
     global logger
 
@@ -55,9 +55,14 @@ def init_main():
 
 
 def run():
+
+    init_logger()
+    if not internet_on():
+        logger.error("No internet connection.")
+        return
+
     t0 = time()
 
-    init_main()
     logger.info("Downloading and Extracting... ")
     job_queue = queue_jobs()  # Get jobs
     job_queue = download_extract_files(job_queue)  # Download, extract, update paths
