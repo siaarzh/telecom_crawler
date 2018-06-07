@@ -7,7 +7,7 @@ from time import time
 
 from crawler.dbfill import DbFill
 from crawler.queuemanager import queue_jobs, download_extract_files, prepare_data
-from crawler.utils import make_log_dir
+from crawler.utils import make_log_dir, MsgCounterHandler
 
 
 def init_main():
@@ -25,6 +25,10 @@ def init_main():
         make_log_dir(log_config_file)
         logging.config.fileConfig(log_config_file)
         logger = logging.getLogger('crawler')
+        counth = MsgCounterHandler()
+        counth.setLevel(logging.DEBUG)
+        logger.addHandler(counth)
+
     else:
         # create a backup logger
         logger = logging.getLogger('crawler')
@@ -34,6 +38,10 @@ def init_main():
         ch = logging.StreamHandler(stream=sys.stdout)
         ch.setLevel(logging.DEBUG)
 
+        # create a messages counter handler
+        counth = MsgCounterHandler()
+        counth.setLevel(logging.DEBUG)
+
         # create formatter
         formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
 
@@ -42,6 +50,7 @@ def init_main():
 
         # add ch to logger
         logger.addHandler(ch)
+        logger.addHandler(counth)
         logger.warning('Using default console logger')
 
 
@@ -79,4 +88,8 @@ def run():
         except Exception as e:
             logger.error("{}: {}".format(table_name, e))
 
+    log_count = logger.handlers[2].level2count
+    print("Jobs Complete!")
+    for level, count in  log_count.items():
+        print('{}: {}'.format(level, count))
     print('time elapsed: {}'.format(timedelta(seconds=time() - t0)))

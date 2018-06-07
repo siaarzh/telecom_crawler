@@ -1,6 +1,11 @@
+import ast
 import importlib
+import json
 import logging
 import os
+from configparser import ConfigParser
+from contextlib import redirect_stdout
+
 import pandas as pd
 import re
 import zipfile
@@ -9,10 +14,8 @@ from urllib import parse
 import rarfile
 import requests
 
-from crawler.utils import save_sources_config, read_sources_config
 
-
-def create_or_update():
+def create_or_update(jobspec_dir: str = 'jobspecs', job_dir: str = 'jobs'):
     """
     Given a job.py file in jobspecs/ directory, creates a job model in
     /jobs directory of same name job.ini. Existing job.ini will be
@@ -25,19 +28,19 @@ def create_or_update():
     :return: message showing create job status
     :rtype: dict
     """
-    if len(os.listdir('jobspecs')) == 0:
+    if len(os.listdir(jobspec_dir)) == 0:
         return {'success': False,
                 'message': 'No jobs specified.'}
 
-    os.makedirs('jobs')
+    os.makedirs(job_dir, exist_ok=True)
 
     try:
-        for job_name in os.listdir('jobspecs'):
+        for job_name in os.listdir(jobspec_dir):
             if job_name.endswith(".py") and '__init__' not in job_name:
                 job_name = os.path.splitext(job_name)[0]
-                job = importlib.import_module("jobspecs.{}".format(job_name))
-                source_model = job.create()
-                save_sources_config(source_model, os.path.join('jobs', job_name + ".ini"), 'ini')
+                job = importlib.import_module("{}.{}".format(jobspec_dir, job_name))
+                job_model = job.create()
+                save_job_model(job_model, os.path.join(job_dir, job_name + ".ini"), 'ini')
         return {'success': True,
                 'message': None}
     except Exception as e:
@@ -60,7 +63,7 @@ def queue_jobs(job_dir: str = 'jobs'):
     try:
         for job_name in os.listdir(job_dir):
             if job_name.endswith((".ini", ".json")):
-                job = read_sources_config(os.path.join(job_dir, job_name))
+                job = read_job_model(os.path.join(job_dir, job_name))
                 _job_queue.update(job)
     except Exception as e:
         raise e
@@ -126,17 +129,14 @@ def download_extract_files(job_queue: dict, logger_name: str = 'crawler'):
                 temp_sheet.append(job_queue[table]["sheet"][i])
                 temp_skip_row.append(job_queue[table]["skip_row"][i])
 
-            elif file_ext in ['rar', 'zip']:
-                if file_ext == '.rar':
+            elif file_ext in (".rar", ".zip"):
+                if file_ext == ".rar":
                     logger.debug("{}: Checking contents of {}".format(table, file_name))
                     archive = rarfile.RarFile(file_path)
-                elif file_ext == '.zip':
+                elif file_ext == ".zip":
                     logger.debug("{}: Checking contents of {}".format(table, file_name))
                     archive = zipfile.ZipFile(file_path)
-                else:
-                    logger.error("{}: Could not recognize archive format. \n"
-                                 "Can only work with rar or zip")
-                    break
+
                 for idx, f in enumerate(archive.namelist()):
                     # check for excel and extract
                     _, f_ext = os.path.splitext(f)
@@ -148,7 +148,15 @@ def download_extract_files(job_queue: dict, logger_name: str = 'crawler'):
                         temp_skip_row.append(job_queue[table]["skip_row"][i])
 
                 logger.debug("{}: Removing {}".format(table, file_name))
-                os.remove(file_path)
+                try:
+                    archive.close()
+                    os.remove(file_path)
+                except Exception as e:
+                    logger.warning("{}: Could not delete {}\n"
+                                   "{}".format(table, file_name, e))
+
+            else:
+                logger.error("{}: Did not recognize downloaded file extension: {}".format(table, file_name))
 
         job_queue[table]["sheet"] = temp_sheet
         job_queue[table]["skip_row"] = temp_skip_row
@@ -216,7 +224,7 @@ def prepare_data(table_data: dict, table_name: str, logger_name: str = 'crawler'
         data = data.loc[:data[(data[table_data["index_col"]] == '')].index[0] - 1, :]
         if len(data) == 0:
             raise IndexError
-        logger.warning('{}: Trimmed from {} to {} rows'.format(table_name, rows_b_trunc, len(data)))
+        logger.debug('{}: Trimmed from {} to {} rows'.format(table_name, rows_b_trunc, len(data)))
     except IndexError:
         pass
     logger.debug('{}: Pre-processing complete, {} rows'.format(table_name, len(data)))
@@ -225,3 +233,104 @@ def prepare_data(table_data: dict, table_name: str, logger_name: str = 'crawler'
 
 if __name__ == '__main__':
     create_or_update()
+
+
+def print_job_model(job_model: dict):
+    """
+    Basic Printout of Hierarchy, better looking than json.dumps()
+
+    :param dict job_model: Dictionary of table names with configuration
+                           information on structure, jobs, etc
+    """
+
+    for table, settings in job_model.items():
+        print('\ntable:', table, '\n|')
+        for category, inf in settings.items():
+            print('|--' + category)
+            if category in ['index_col', 'store']:
+                print('|    |-' + str(inf), end='\n|\n')
+                continue
+            for item in inf:
+                if category == list(job_model[table].keys())[-1]:
+                    print('     |-' + str(item))
+                else:
+                    print('|    |-' + str(item))
+            if category != list(job_model[table].keys())[-1]:
+                print('|')
+
+
+def export_hierarchy(table_hierarchy: dict, output: str = 'table_hierarchy.txt'):
+    """
+    Wrapper for file output of print_hierarchy method
+
+    :param dict table_hierarchy: Dictionary of table names with configuration
+                                 information on structure, jobs, etc
+    :param str output: Path to output file.
+    """
+
+    with open(output, 'w') as f:
+        with redirect_stdout(f):
+            print_job_model(table_hierarchy)
+
+
+def save_job_model(data: dict, output_path: str, file_format: str = 'json'):
+    """
+    Save your job model (parameters) into file.
+
+    :param dict data: Table hierarchy dictionary.
+    :param str output_path: Destination to save file.
+    :param str file_format: Output format, can be either 'json' or 'ini'
+    """
+
+    if file_format == 'json':
+        with open(output_path, 'w') as configfile:
+            json.dump(data, configfile, indent=2, ensure_ascii=False)
+
+    elif file_format in ['ini']:
+        config = ConfigParser()
+
+        for key1, data1 in data.items():
+            config[key1] = {}
+            for key2, data2 in data1.items():
+                config[key1]["{}".format(key2)] = str(data2)
+
+        with open(output_path, 'w') as configfile:
+            config.write(configfile)
+
+    else:
+        raise ValueError("file_format can only be [ json | ini ]")
+
+
+def read_job_model(source: str, file_format: str = 'auto'):
+    """
+    Read job model (parameters) from existing file.
+
+    :param str source: Configuration file path.
+    :param str file_format: File format, can be either 'ini', 'json' or 'auto' for automatic
+                            selection based on file extension.
+    """
+
+    _, file_ext = os.path.splitext(source)
+
+    if (file_format == 'auto' and file_ext in ['.ini', '.conf']) or file_format in ['ini', 'conf']:
+        parser = ConfigParser()
+        parser.read(source)
+
+        data = {}
+
+        for section in parser.sections():
+            data[section] = {}
+            for k, val in parser.items(section):
+                if k in ['index_col', 'store']:
+                    data[section][k] = str(val)
+                else:
+                    data[section][k] = ast.literal_eval(str(val))
+
+    elif (file_format == 'auto' and file_ext in ['.json']) or file_format in ['json']:
+        with open(source, 'r') as configfile:
+            data = json.load(configfile)
+
+    else:
+        raise ValueError("Unknown format: {}".format(file_ext))
+
+    return data
