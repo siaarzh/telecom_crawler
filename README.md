@@ -10,7 +10,7 @@ The main entry point to the ETL is `run.py`, which loads jobs contained in `/job
 $ venv/bin/python run.py
 ```
 
-`run.py` launches `crawler.crawler.run()` process that loads all job contained in `/jobs`. These are either `.json` or `.ini` files of the following format:
+`run.py` launches `crawler.crawler.run()` process that loads all jobs contained in `/jobs`. These are either `.json` or `.ini` files of the following format:
 
 ```ini
 [WHO_STAT_C_MORTALITY]
@@ -32,6 +32,8 @@ As you can guess, such a configuration relies on stability of the source format 
 $ venv/bin/python update_jobs.py 
 ```
 
+Once there, you can run the `update_jobs.py` script to update the `/jobs` folder with the correct job models.
+
 ### Prerequisites
 
 At least Python 3.5 is needed.
@@ -45,6 +47,7 @@ Due to licensing, some third party libraries are needed:
 
 1. Download or `clone` the repository
 2. Install the the necessary packages:
+
 ```bash
 ~ $ git clone git@bitbucket.org:siaarzh/telecom_crawler.git 
 ~ $ cd telecom_crawler
