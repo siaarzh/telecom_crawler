@@ -5,20 +5,27 @@ import logging.config
 from datetime import timedelta
 from time import time
 
+from slackclient import SlackClient
+
 from crawler.dbfill import DbFill
 from crawler.queuemanager import queue_jobs, download_extract_files, prepare_data
-from crawler.utils import make_log_dir, MsgCounterHandler, internet_on
+from crawler.utils import make_log_dir, MsgCounterHandler, internet_on, get_bot_user_token, DummySlackClient
 
 
 def init_logger():
     global root_path
     global logger
+    global slack_client
+    global slack_channel
 
     # set root_path
     root_path = os.path.abspath(os.curdir)
 
     # set logging config path, you may use the template too
     log_config_file = os.path.join('conf', 'logging.conf')
+
+    # set logging config path, you may use the template too
+    slack_config_file = os.path.join('conf', 'slack.conf')
 
     if os.path.exists(log_config_file):
         # create logger
@@ -53,9 +60,20 @@ def init_logger():
         logger.addHandler(counth)
         logger.warning('Using default console logger')
 
+    if os.path.exists(slack_config_file):
+        slack_token, slack_channel = get_bot_user_token(slack_config_file)
+        slack_client = SlackClient(slack_token)
+        if slack_client.rtm_connect(with_team_state=False):
+            logger.debug('Slack bot connected')
+        else:
+            logger.warning('Slack bot failed to connect!')
+    else:
+        slack_client = DummySlackClient()
+        slack_channel = None
+        logger.debug('Dummy Slack bot initialized')
+
 
 def run():
-
     init_logger()
     if not internet_on():
         logger.error("No internet connection.")
@@ -94,7 +112,14 @@ def run():
             logger.error("{}: {}".format(table_name, e))
 
     log_count = logger.handlers[2].level2count
-    print("Jobs Complete!")
-    for level, count in  log_count.items():
-        print('{}: {}'.format(level, count))
-    print('time elapsed: {}'.format(timedelta(seconds=time() - t0)))
+    end_msg = "`telecom_crawler` task completed\n" + \
+              "```" + \
+              "\n".join(["{}: {}".format(l, c) for l, c in log_count.items()]) + \
+              "```\n" + \
+              "time elapsed: {}".format(timedelta(seconds=time() - t0))
+    slack_client.api_call(
+        "chat.postMessage",
+        channel=slack_channel,
+        text=end_msg
+    )
+    print(end_msg.replace('`', ''))

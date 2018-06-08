@@ -1,7 +1,7 @@
 import ast
 import logging
 import os
-from configparser import RawConfigParser
+from configparser import RawConfigParser, ConfigParser
 
 import requests
 
@@ -25,12 +25,20 @@ def make_log_dir(conf_file: str):
                 for log_path in ast.literal_eval(str(parser[section]['args']))[:1]:
                     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
+
 def internet_on():
     try:
         requests.get('http://216.58.192.142')
         return True
     except requests.exceptions.ConnectionError:
         return False
+
+
+def get_bot_user_token(conf_file='slack.ini'):
+    # fetches bot user token
+    parser = ConfigParser()
+    parser.read(conf_file)
+    return parser['slack']['SLACK_BOT_USER_TOKEN'], parser['slack']['channel']
 
 
 class MsgCounterHandler(logging.Handler):
@@ -42,6 +50,14 @@ class MsgCounterHandler(logging.Handler):
 
     def emit(self, record):
         l = record.levelname
-        if (l not in self.level2count):
+        if l not in self.level2count:
             self.level2count[l] = 0
         self.level2count[l] += 1
+
+
+class DummySlackClient(object):
+    def __init__(self):
+        pass
+
+    def api_call(self, *args, **kwargs):
+        pass
