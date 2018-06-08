@@ -1,7 +1,7 @@
 import ast
 import logging
 import os
-from configparser import RawConfigParser
+from configparser import RawConfigParser, ConfigParser
 
 import requests
 
@@ -25,12 +25,36 @@ def make_log_dir(conf_file: str):
                 for log_path in ast.literal_eval(str(parser[section]['args']))[:1]:
                     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
+
 def internet_on():
     try:
         requests.get('http://216.58.192.142')
         return True
     except requests.exceptions.ConnectionError:
         return False
+
+
+def get_bot_user_token(conf_file='slack.ini'):
+    # fetches bot user token
+    parser = ConfigParser()
+    parser.read(conf_file)
+    return parser['slack']['SLACK_BOT_USER_TOKEN'], parser['slack']['channel']
+
+
+def filter_log_count(log_cnt, severity=('ERROR', 'WARNING')):
+    new_log_count = {}
+    for key, value in log_cnt.items():
+        if key in severity:
+            new_log_count.update({key: value})
+
+    if len(new_log_count) != 0:
+        count_msg = "```" + \
+                    "\n".join(["{}: {}".format(l, c) for l, c in new_log_count.items()]) + \
+                    "```\n"
+    else:
+        count_msg = ""
+
+    return count_msg
 
 
 class MsgCounterHandler(logging.Handler):
@@ -41,7 +65,15 @@ class MsgCounterHandler(logging.Handler):
         self.level2count = {}
 
     def emit(self, record):
-        l = record.levelname
-        if (l not in self.level2count):
-            self.level2count[l] = 0
-        self.level2count[l] += 1
+        lvl = record.levelname
+        if lvl not in self.level2count:
+            self.level2count[lvl] = 0
+        self.level2count[lvl] += 1
+
+
+class DummySlackClient(object):
+    def __init__(self):
+        pass
+
+    def api_call(self, *args, **kwargs):
+        pass

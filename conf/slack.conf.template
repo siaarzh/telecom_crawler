@@ -1,0 +1,5 @@
+[slack]
+SLACK_CLIENT_ID = 20xxxxxxxxxx.20xxxxxxxxxx
+SLACK_CLIENT_SECRET = d29fe85a95c9xxxxxxxxxxxxxxxxxxxxx
+SLACK_VERIFICATION_TOKEN = xpxxxxxxxxxxxxxxxxxxxxxxxxx
+SLACK_BOT_USER_TOKEN = xoxb-xxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxx
