@@ -9,7 +9,8 @@ from slackclient import SlackClient
 
 from crawler.dbfill import DbFill
 from crawler.queuemanager import queue_jobs, download_extract_files, prepare_data
-from crawler.utils import make_log_dir, MsgCounterHandler, internet_on, get_bot_user_token, DummySlackClient
+from crawler.utils import make_log_dir, MsgCounterHandler, internet_on, get_bot_user_token, DummySlackClient, \
+    filter_log_count
 
 
 def init_logger():
@@ -24,7 +25,7 @@ def init_logger():
     # set logging config path, you may use the template too
     log_config_file = os.path.join('conf', 'logging.conf')
 
-    # set logging config path, you may use the template too
+    # set slack bot config path
     slack_config_file = os.path.join('conf', 'slack.conf')
 
     if os.path.exists(log_config_file):
@@ -113,10 +114,8 @@ def run():
 
     log_count = logger.handlers[2].level2count
     end_msg = "`telecom_crawler` task completed\n" + \
-              "```" + \
-              "\n".join(["{}: {}".format(l, c) for l, c in log_count.items()]) + \
-              "```\n" + \
-              "time elapsed: {}".format(timedelta(seconds=time() - t0))
+              filter_log_count(log_count) + \
+              "runtime: {}".format(timedelta(seconds=time() - t0))
     slack_client.api_call(
         "chat.postMessage",
         channel=slack_channel,

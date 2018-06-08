@@ -41,6 +41,22 @@ def get_bot_user_token(conf_file='slack.ini'):
     return parser['slack']['SLACK_BOT_USER_TOKEN'], parser['slack']['channel']
 
 
+def filter_log_count(log_cnt, severity=('ERROR', 'WARNING')):
+    new_log_count = {}
+    for key, value in log_cnt.items():
+        if key in severity:
+            new_log_count.update({key: value})
+
+    if len(new_log_count) != 0:
+        count_msg = "```" + \
+                    "\n".join(["{}: {}".format(l, c) for l, c in new_log_count.items()]) + \
+                    "```\n"
+    else:
+        count_msg = ""
+
+    return count_msg
+
+
 class MsgCounterHandler(logging.Handler):
     level2count = None
 
@@ -49,10 +65,10 @@ class MsgCounterHandler(logging.Handler):
         self.level2count = {}
 
     def emit(self, record):
-        l = record.levelname
-        if l not in self.level2count:
-            self.level2count[l] = 0
-        self.level2count[l] += 1
+        lvl = record.levelname
+        if lvl not in self.level2count:
+            self.level2count[lvl] = 0
+        self.level2count[lvl] += 1
 
 
 class DummySlackClient(object):
