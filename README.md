@@ -118,7 +118,7 @@ TBD
 
 On Linux, you can schedule a timer using `systemd`. Create a `.service` and `.timer` with the same name in the `/etc/systemd/system/` directory. 
 
-```
+```ini
 # /etc/systemd/system/etl.service
 [Unit]
 Description=ETL worker
@@ -130,7 +130,7 @@ Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:p
 ExecStart=path/to/workdir/venv/bin/python run.py
 ```
 ---
-```
+```ini
 # /etc/systemd/system/etl.timer
 [Unit]
 Description=Run etl.service every week on Monday
