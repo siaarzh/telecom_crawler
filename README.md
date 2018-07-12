@@ -105,7 +105,7 @@ Due to licensing, some third party libraries are needed:
 2. Install the the necessary packages:
 
 ```bash
-~ $ git clone git@bitbucket.org:siaarzh/telecom_crawler.git 
+~ $ git clone https://github.com/siaarzh/telecom_crawler.git 
 ~ $ cd telecom_crawler
 telecom_crawler $ pip install -r requirements.txt
 ```
