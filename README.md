@@ -39,7 +39,7 @@ Using `ini` format:
 [WHO_STAT_MORTALITY]
 urls = ['http://www.who.int/healthinfo/statistics/whostat2005_mortality.xls']
 structure = ['Num', 'Country', 'WHO_Region', 'life_exp_m', 'life_exp_f', 'h_life_exp_m', 'h_life_exp_f', 'P_death_m', 'P_death_f', 'P_death_5y', 'P_death_28d', 'R_death_maternal']
-store = full\path\to\data\WHO_STAT_MORTALITY
+store = full/path/to/data/WHO_STAT_MORTALITY
 index_col = Num
 sheet = [None]
 skip_row = [7]
@@ -52,7 +52,7 @@ Or `json` format:
   "WHO_STAT_MORTALITY": {
     "index_col": "Num",
     "path": [],
-    "store": "full\path\to\data\WHO_STAT_MORTALITY",
+    "store": "full/path/to/data/WHO_STAT_MORTALITY",
     "urls": [
       "http://www.who.int/healthinfo/statistics/whostat2005_mortality.xls"
     ],
