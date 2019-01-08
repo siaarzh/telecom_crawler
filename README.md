@@ -110,6 +110,8 @@ Due to licensing, some third party libraries are needed:
 telecom_crawler $ pip install -r requirements.txt
 ```
 
+3. Set configuration by altering the files in `/conf` directory.
+
 ## Running the tests
 
 TBD
